@@ -5,7 +5,9 @@
 
 namespace s21 {
 S21View::S21View(std::string programName)
-    : programName_{std::move(programName)}, exitingSelector_{0} {}
+    : programName_{std::move(programName)}, exitingSelector_{0} {
+  std::cout << programName_ << std::endl << std::endl;
+}
 
 S21View::S21View(S21View &&other) noexcept : exitingSelector_{0} {
   this->interfaceComponents_ = other.interfaceComponents_;
@@ -34,7 +36,6 @@ void S21View::S21Run() {
 }
 
 void S21View::S21Printing() {
-  std::cout << std::endl;
   if (interfaceComponents_.empty()) {
     throw std::out_of_range("You can't display an empty interface");
   }
@@ -72,10 +73,13 @@ void S21View::S21ChoiceHandle() {
   } catch (std::exception &e) {
     std::cerr << e.what() << '\n';
   }
+
+  std::cout << "\n=----------=\n";
 }
 
 void S21View::S21AddComponent(const std::string &str,
                               const std::function<void()> &func) {
   interfaceComponents_.emplace_back(str, func);
 }
+
 }  // namespace s21
