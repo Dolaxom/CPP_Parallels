@@ -58,15 +58,15 @@ uint32_t S21View::S21MakeChoice() {
 
 void S21View::S21ChoiceHandle() {
   uint32_t choice = S21MakeChoice();
-  if (choice != exitingSelector_) {
-    --choice;  // Numbering in the interface starts with 1
-  } else {
+  if (choice == exitingSelector_) {
     throw std::exception();
   }
 
+  --choice;  // Numbering in the interface starts with 1
+
   try {
-    if (choice > interfaceComponents_.size()) {
-      throw std::out_of_range("You are out of the array");
+    if (choice >= interfaceComponents_.size()) {
+      throw std::out_of_range("This menu item is not available");
     }
     interfaceComponents_[choice].second();
   } catch (std::exception &e) {
