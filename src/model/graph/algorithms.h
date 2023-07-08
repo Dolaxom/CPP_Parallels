@@ -1,0 +1,6 @@
+#ifndef SRC_MODEL_GRAPH_ALGORITHMS_H
+#define SRC_MODEL_GRAPH_ALGORITHMS_H
+
+class S21Algorithms {};
+
+#endif  // SRC_MODEL_GRAPH_ALGORITHMS_H
