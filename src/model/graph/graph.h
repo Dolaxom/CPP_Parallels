@@ -3,13 +3,17 @@
 
 #include <cstdint>
 #include <vector>
+#include <string>
 
 namespace s21 {
 
 class S21Graph {
  public:
   S21Graph() = delete;
-  S21Graph(uint32_t size);
+  explicit S21Graph(uint32_t size);
+  double& operator()(int i, int j);
+
+  static S21Graph S21LoadGraphFromFile(const std::string& filepath);
 
  private:
   std::vector<std::vector<double>> adjacencyMatrix_;
