@@ -16,6 +16,7 @@ void S21Graph::initGraph(uint32_t size) {
 double& S21Graph::operator()(int i, int j) {
   return adjacencyMatrix_.at(i).at(j);
 }
+
 S21Graph S21Graph::S21LoadGraphFromFile(const std::string& filepath) {
   int size{};
 

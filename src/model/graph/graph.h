@@ -11,6 +11,7 @@ class S21Graph {
  public:
   S21Graph() = delete;
   explicit S21Graph(uint32_t size);
+  
   double& operator()(int i, int j);
 
   static S21Graph S21LoadGraphFromFile(const std::string& filepath);
