@@ -5,6 +5,9 @@
 #include <string>
 #include <vector>
 
+#include "model/graph/algorithms.h"
+#include "view/view.h"
+
 namespace s21 {
 
 class S21Parallels {
@@ -12,8 +15,8 @@ class S21Parallels {
   S21Parallels();
 
  private:
-  std::unique_ptr<class S21Algorithms> graphAlgorithms_;
-  std::unique_ptr<class S21View> view_;
+  std::unique_ptr<S21Algorithms> graphAlgorithms_;
+  std::unique_ptr<S21View> view_;
 
   std::vector<std::string> selectorsName_;
   void S21FillSelectorsName();
