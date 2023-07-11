@@ -19,7 +19,7 @@ class S21Parallels {
   std::unique_ptr<S21View> view_;
 
   std::vector<std::string> selectorsName_;
-  void S21FillSelectorsName();
+  void AddViewComponents();
 };
 
 }  // namespace s21
