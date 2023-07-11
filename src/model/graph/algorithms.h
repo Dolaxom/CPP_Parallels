@@ -2,6 +2,10 @@
 #define SRC_MODEL_GRAPH_ALGORITHMS_H
 
 #include <vector>
+#include <memory>
+#include <string>
+
+#include "graph.h"
 
 namespace s21 {
 
@@ -16,13 +20,16 @@ class S21Algorithms {
   void S21OutputTimes() const;
 
  private:
-  double synchronousTime_;
-  double asynchronousTime_;
+  std::unique_ptr<S21Graph> graph;
+  long long synchronousTime_;
+  long long  asynchronousTime_;
 
   struct S21TsmResult {
     std::vector<int> vertices;
     double distance;
   };
+
+  void S21SetPath();
 };
 
 }  // namespace s21
