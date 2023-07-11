@@ -15,6 +15,7 @@ class S21Graph {
   double& operator()(int32_t i, int32_t j);
 
   static S21Graph S21LoadGraphFromFile(const std::string& filepath);
+  [[nodiscard]] uint32_t S21Size() const;
 
  private:
   std::vector<std::vector<double>> adjacencyMatrix_;

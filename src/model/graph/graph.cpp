@@ -42,4 +42,6 @@ S21Graph S21Graph::S21LoadGraphFromFile(const std::string& filepath) {
   return graph;
 }
 
+uint32_t S21Graph::S21Size() const { return adjacencyMatrix_.size(); }
+
 }  // namespace s21
