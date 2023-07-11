@@ -3,19 +3,22 @@
 #include "algorithms.h"
 
 namespace s21 {
-void S21Algorithms::S21SynchronousAntAlgorithm() {
-  synchronousTime_ = 1.25f;
-}
+S21Algorithms::S21Algorithms() : synchronousTime_{0.0}, asynchronousTime_{0.0} {}
 
-void S21Algorithms::S21AsynchronousAntAlgorithm() {
-  asynchronousTime_ = 0.5f;
-}
-void S21Algorithms::S21OutputTimes() {
+void S21Algorithms::S21OutputTimes() const {
   std::cout << "Synchronous time: " << synchronousTime_ << " s\n"
-      << "Asynchronous time: " << asynchronousTime_ << " s\n" <<
-      "difference in time: " << synchronousTime_ - asynchronousTime_ << " s.";
-
+            << "Asynchronous time: " << asynchronousTime_ << " s\n"
+            << "Difference in time: " << synchronousTime_ - asynchronousTime_
+            << " s.";
 }
 
-} // namespace s21
+S21Algorithms::S21TsmResult S21Algorithms::S21SynchronousAntAlgorithm() {
 
+  return {};
+}
+
+S21Algorithms::S21TsmResult S21Algorithms::S21AsynchronousAntAlgorithm() {
+  return {};
+}
+
+}  // namespace s21
