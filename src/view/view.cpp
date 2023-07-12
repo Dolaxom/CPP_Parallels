@@ -2,6 +2,7 @@
 
 #include <iostream>
 #include <stdexcept>
+#include <limits>
 
 namespace s21 {
 S21View::S21View(std::string programName)
