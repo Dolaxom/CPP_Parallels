@@ -5,7 +5,7 @@
 #include <string>
 #include <vector>
 
-#include "model/graph/algorithms.h"
+#include "model/graph/ant_algorithms.h"
 #include "view/view.h"
 
 namespace s21 {
