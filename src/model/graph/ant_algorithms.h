@@ -11,6 +11,7 @@ namespace s21 {
 
 class S21Algorithms {
   struct S21TsmResult;
+  struct S21Solve;
   struct S21AntAlgorithmParameters;
 
  public:
@@ -29,11 +30,12 @@ class S21Algorithms {
 
   void S21SetPath();
   void S21InitPheromoneMatrix();
-  double S21ProbabilityOfMoving(int i, int j, double alpha, double beta);
-  void S21PheromoneAddition();
+  double S21ProbabilityOfMoving(int i, int j, double alpha, double beta,
+                                const std::vector<uint32_t>& tabu);
+  void S21PheromoneAddition(const std::vector<S21Solve>& solve);
 
   struct S21TsmResult {
-    std::vector<int> vertices;
+    std::vector<uint32_t> vertices;
     double distance;
   };
 
