@@ -15,7 +15,7 @@ void S21Graph::initGraph(uint32_t size) {
   }
 }
 
-double& S21Graph::operator()(int32_t i, int32_t j) {
+double& S21Graph::operator()(uint32_t i, uint32_t j) {
   return adjacencyMatrix_.at(i).at(j);
 }
 

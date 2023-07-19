@@ -12,7 +12,7 @@ class S21Graph {
   S21Graph() = delete;
   explicit S21Graph(uint32_t size);
   
-  double& operator()(int32_t i, int32_t j);
+  double& operator()(uint32_t i, uint32_t j);
 
   static S21Graph S21LoadGraphFromFile(const std::string& filepath);
   [[nodiscard]] uint32_t S21Size() const;
