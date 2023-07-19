@@ -7,12 +7,19 @@
 #include <random>
 #include <stdexcept>
 
+using value = uint32_t;
+using leftBorder = double;
+using rightBorder = double;
+using interval = std::pair<leftBorder, rightBorder>;
+
 namespace s21 {
 S21Algorithms::S21Algorithms()
     : synchronousTime_{0},
       asynchronousTime_{0},
-      pheromoneInitial_{0.5},
-      antParams_{1.0, 1.0, 4.0, 0.1, 200} {}
+      pheromoneInitial_{0.1},
+      antParams_{3.0, 1.0, 4.0, 0.1, 5000} {
+  graphGet = std::bind(&S21Graph::operator(), graph_.get(), std::placeholders::_1, std::placeholders::_2);
+}
 
 void S21Algorithms::S21OutputTimes() const {
   std::cout << "Synchronous time: " << synchronousTime_ << " ns\n"
@@ -27,125 +34,109 @@ S21Algorithms::S21TsmResult S21Algorithms::S21SynchronousAntAlgorithm() {
     S21InitPheromoneMatrix();
   }
 
-  uint32_t antsCount = graph_->S21Size();
-  std::vector<S21Solve> solve(antsCount);
+  S21TsmResult result;
 
-  auto startTime = std::chrono::steady_clock::now();
+  uint32_t numAnts = graph_->S21Size();
+  uint32_t numVertices = graph_->S21Size();
 
+  int startVertex = 0;
   for (uint32_t i = 0; i < antParams_.iterationsCount; ++i) {
-    for (uint32_t ant = 0; ant < antsCount; ++ant) {
-      std::vector<uint32_t> tabu = {0};         // Start with vertex 0
-      std::vector<uint32_t> availableVertices;  // Corrected initialization
-
-      for (uint32_t j = 1; j < graph_->S21Size(); ++j) {  // Start from 1, not 0
-        availableVertices.push_back(j);
+    for (uint32_t ant = 0; ant < numAnts; ++ant) {
+      if (startVertex >= numAnts) {
+        startVertex = 0;
       }
 
-      while (availableVertices.size() > 0) {
-        uint32_t currentVertex = tabu.back();
-        std::vector<std::pair<double, double>> probabilityResults;
+      std::vector<uint32_t> path;
+      double pathLength{};
+      path.push_back(startVertex++);
 
-        // Calculate probabilities of moving to available vertices
-        double totalProbability = 0.0;
-        for (uint32_t j : availableVertices) {
-          double probability = S21ProbabilityOfMoving(
-              currentVertex, j, antParams_.alpha, antParams_.beta, tabu);
-          probabilityResults.emplace_back(totalProbability,
-                                          totalProbability + probability);
-          totalProbability += probability;
-        }
+      while (path.size() < numVertices) {
+        uint32_t currentVertex = path.back();
+        uint32_t nextVertex{};
+        // helper for nextVertex
+        std::vector<std::pair<value, interval>> valueIntervals;
 
-        // Choose the next vertex based on probabilities
-        double randomValue = (double)rand() / RAND_MAX;
-        uint32_t nextVertex =
-            availableVertices[0];  // Default to the first available vertex
-        for (uint32_t j = 0; j < probabilityResults.size(); ++j) {
-          if (randomValue >= probabilityResults[j].first &&
-              randomValue < probabilityResults[j].second) {
-            nextVertex = availableVertices[j];
-            break;
+        // Calculate next vertex
+        // Считаем знаменатель из тех, кого нет в path (общий для всех)
+
+        double denominator{0.0};
+        for (int m = 0; m < graph_->S21Size(); ++m) {
+          if (std::find(path.begin(), path.end(), m) == path.end()) {
+            if (graph_->operator()(currentVertex, m) == 0.0) continue;
+            double pheromone = std::pow(pheromoneMatrix_[currentVertex][m], antParams_.alpha);
+            double length = 1.0 / std::pow(graph_->operator()(currentVertex, m), antParams_.beta);
+            denominator += pheromone * length;
           }
         }
 
-        // Move to the next vertex and update tabu and availableVertices
-        tabu.push_back(nextVertex);
-        availableVertices.erase(
-            std::remove(availableVertices.begin(), availableVertices.end(),
-                        nextVertex),
-            availableVertices.end());
+        // Считаем каждый P(i, j) кого нет в path и записываем в массив
+
+        double p{0.0};
+        for (int m = 0; m < graph_->S21Size(); ++m) {
+          if (std::find(path.begin(), path.end(), m) == path.end()) {
+            if (graph_->operator()(currentVertex, m) == 0.0) continue;
+            double pheromone = std::pow(pheromoneMatrix_[currentVertex][m], antParams_.alpha);
+            double length = 1.0 / std::pow(graph_->operator()(currentVertex, m), antParams_.beta);
+            p = (pheromone * length) / denominator;
+
+            // Считаем интервайлы и кладём p в массив
+            double left, right;
+            if (valueIntervals.empty()) {
+              left = 0;
+            } else {
+              left = valueIntervals.back().second.second;
+            }
+            right = left + p;
+
+            valueIntervals.emplace_back(m, std::make_pair(left, right));
+          }
+        }
+
+        // Выбираем рандомом точку
+        std::random_device rd;
+        std::mt19937 gen(rd());
+        std::uniform_real_distribution<double> dis(0.0, 1.0);
+        double randomValue = dis(gen);
+
+        // Ищем эту точку
+        for (auto& valueInterval : valueIntervals) {
+          if (randomValue >= valueInterval.second.first && randomValue <= valueInterval.second.second) {
+            nextVertex = valueInterval.first;
+          }
+        }
+
+        pathLength += graph_->operator()(path.back(), nextVertex);
+        path.push_back(nextVertex);
+      } // while (path.size() < numVertices)
+
+      // Обновляем феромон
+      int it1 = 0;
+      int it2 = 1;
+
+      while (it2 != path.size()) {
+        pheromoneMatrix_[path[it1]][path[it2]] += (antParams_.q / pathLength);
+        ++it1;
+        ++it2;
       }
 
-      // Calculate the total path length for the ant's route
-      double totalPathLength = 0.0;
-      for (uint32_t j = 1; j < tabu.size(); ++j) {
-        totalPathLength += (*graph_)(tabu[j - 1], tabu[j]);
-      }
+      result.vertices = path;
+      result.distance = pathLength;
+    } // for (uint32_t ant = 0; ant < numAnts; ++ant)
+  } // for (uint32_t i = 0; i < antParams_.iterationsCount; ++i)
 
-      solve[ant] = {std::move(tabu), totalPathLength,
-                    antParams_.q / totalPathLength};
-    }
-
-    // Update pheromone matrix
-    S21PheromoneAddition(solve);
-
-    if (i == antParams_.iterationsCount - 1) continue;
-    for (auto& s : solve) s.route.clear();
-  }
-
-  // Find the best solution
-  double bestDistance = std::numeric_limits<double>::max();
-  std::vector<uint32_t> bestRoute;
-
-  for (const auto& s : solve) {
-    if (s.pathLength < bestDistance) {
-      bestDistance = s.pathLength;
-      bestRoute = s.route;
-    }
-  }
-
-  // Return the best result
-  S21TsmResult result;
-  result.distance = bestDistance;
-  result.vertices = bestRoute;
-
-  auto endTime = std::chrono::steady_clock::now();
-  auto elapsedNanoseconds =
-      std::chrono::duration_cast<std::chrono::nanoseconds>(endTime - startTime);
-  synchronousTime_ = elapsedNanoseconds.count();
+  result.distance += graph_->operator()(result.vertices.back(), --startVertex);
+  result.vertices.push_back(startVertex);
 
   return result;
 }
 
-void S21Algorithms::S21PheromoneAddition(const std::vector<S21Solve>& solve) {
-  for (const auto& s : solve) {
-    for (uint32_t i = 0; i < s.route.size() - 1; ++i) {
-      uint32_t from = s.route[i];
-      uint32_t to = s.route[i + 1];
-      pheromoneMatrix_[from][to] += s.pheromone;
-      pheromoneMatrix_[to][from] +=
-          s.pheromone;  // Assuming the graph is undirected
-    }
-  }
-}
-
-double S21Algorithms::S21ProbabilityOfMoving(
-    int i, int j, double alpha, double beta,
-    const std::vector<uint32_t>& tabu) {
-  double pheromone = pheromoneMatrix_[i][j];
-  double distance = (*graph_)(i, j);
-
-  if (pheromone == 0.0) {
-    pheromone = 0.0001;
+S21Algorithms::S21TsmResult S21Algorithms::S21AsynchronousAntAlgorithm() {
+  if (graph_ == nullptr) {
+    S21SetPath();
+    S21InitPheromoneMatrix();
   }
 
-  if (std::find(tabu.begin(), tabu.end(), j) != tabu.end()) {
-    return 0.0;
-  }
-
-  double probability =
-      std::pow(pheromone, alpha) * std::pow(1.0 / distance, beta);
-
-  return probability;
+  return {};
 }
 
 void S21Algorithms::S21SetPath() {
@@ -167,10 +158,6 @@ void S21Algorithms::S21InitPheromoneMatrix() {
     v.resize(graph_->S21Size());
     std::fill(v.begin(), v.end(), pheromoneInitial_);
   }
-}
-
-S21Algorithms::S21TsmResult S21Algorithms::S21AsynchronousAntAlgorithm() {
-  return {};
 }
 
 }  // namespace s21

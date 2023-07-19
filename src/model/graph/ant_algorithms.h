@@ -1,6 +1,7 @@
 #ifndef SRC_MODEL_GRAPH_ALGORITHMS_H
 #define SRC_MODEL_GRAPH_ALGORITHMS_H
 
+#include <functional>
 #include <memory>
 #include <string>
 #include <vector>
@@ -23,6 +24,7 @@ class S21Algorithms {
 
  private:
   std::unique_ptr<S21Graph> graph_;
+  std::function<double(uint32_t, uint32_t)> graphGet;
   std::vector<std::vector<double>> pheromoneMatrix_;
   long long synchronousTime_;
   long long asynchronousTime_;
@@ -30,9 +32,7 @@ class S21Algorithms {
 
   void S21SetPath();
   void S21InitPheromoneMatrix();
-  double S21ProbabilityOfMoving(int i, int j, double alpha, double beta,
-                                const std::vector<uint32_t>& tabu);
-  void S21PheromoneAddition(const std::vector<S21Solve>& solve);
+
 
   struct S21TsmResult {
     std::vector<uint32_t> vertices;
